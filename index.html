@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LabTrack — Fichas de Cosecha</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!--
+    jsPDF — loaded as a classic script (exposes window.jspdf globally).
+    Must appear BEFORE the ES module so the global is available when pdf.js runs.
+  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ════════════ HEADER ════════════ -->
+  <header>
+    <div class="logo-wrap">
+      <span class="logo">LABTRACK</span>
+      <span class="logo-sub">Fichas de Cosecha</span>
+    </div>
+    <div class="header-divider"></div>
+    <span id="badge">0 / 9 fichas</span>
+  </header>
+
+  <!-- ════════════ MAIN LAYOUT ════════════ -->
+  <div class="layout">
+
+    <!-- ── FORM PANEL ── -->
+    <aside class="form-panel">
+
+      <!-- Datos generales -->
+      <div class="form-section">
+        <p class="sec-label">Datos Generales</p>
+
+        <div class="field">
+          <label for="f-lab">Laboratorio</label>
+          <input type="text" id="f-lab" placeholder="Nombre del laboratorio">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fecha">Fecha (auto)</label>
+            <input type="text" id="f-fecha" class="date-field" readonly>
+          </div>
+          <div class="field">
+            <label for="f-carro">N.° Carro</label>
+            <input type="text" id="f-carro" placeholder="Ej: 07">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tanques -->
+      <div class="form-section">
+        <p class="sec-label">Tanques — Organismos cosechados</p>
+
+        <div class="t-grid">
+          <div class="field"><label for="f-t1">T1</label><input type="text" id="f-t1" placeholder="0"></div>
+          <div class="field"><label for="f-t2">T2</label><input type="text" id="f-t2" placeholder="0"></div>
+          <div class="field"><label for="f-t3">T3</label><input type="text" id="f-t3" placeholder="0"></div>
+          <div class="field"><label for="f-t4">T4</label><input type="text" id="f-t4" placeholder="0"></div>
+          <div class="field"><label for="f-t5">T5</label><input type="text" id="f-t5" placeholder="0"></div>
+          <div class="field"><label for="f-t6">T6</label><input type="text" id="f-t6" placeholder="0"></div>
+          <div class="field"><label for="f-t7">T7</label><input type="text" id="f-t7" placeholder="0"></div>
+          <div class="field"><label for="f-t8">T8</label><input type="text" id="f-t8" placeholder="0"></div>
+        </div>
+      </div>
+
+      <!-- Conteos -->
+      <div class="form-section">
+        <p class="sec-label">Conteos</p>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-cfact">C. Factorial</label>
+            <input type="text" id="f-cfact" placeholder="Ej: 6300000">
+          </div>
+          <div class="field">
+            <label for="f-creal">C. Real</label>
+            <input type="text" id="f-creal" placeholder="Ej: 6520000">
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-section" style="flex:1">
+        <p class="sec-label">Observaciones</p>
+        <div class="field">
+          <textarea id="f-obs" placeholder="Comentario breve sobre el camión..."></textarea>
+        </div>
+      </div>
+
+      <!-- ── CONTROLS ── -->
+      <div class="btn-area">
+        <button id="btn-add" class="btn-add">
+          ➕ &nbsp;Guardar Ficha en Vista Previa
+        </button>
+
+        <div class="btn-row">
+          <button id="btn-save" class="btn-sec">💾 Guardar Local</button>
+          <button id="btn-load" class="btn-sec">📂 Cargar</button>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-pdf"   class="btn-pdf">📄 Generar PDF</button>
+          <button id="btn-clear" class="btn-clear">🗑 Borrar</button>
+        </div>
+
+        <button id="btn-clear-all" class="btn-clear-all">
+          ✕ &nbsp;Vaciar todo el lote
+        </button>
+      </div>
+
+    </aside><!-- /form-panel -->
+
+    <!-- ── PREVIEW PANEL ── -->
+    <main class="preview-panel">
+      <p class="preview-label">Vista previa — Hoja A4 · 9 fichas máx.</p>
+      <div class="a4" id="preview-grid">
+        <!-- Rendered by ui.js → renderPreview() -->
+      </div>
+      <p class="preview-hint">Pase el cursor sobre una ficha para ver la opción de eliminarla</p>
+    </main>
+
+  </div><!-- /layout -->
+
+  <!-- ════════════ PDF MODAL ════════════ -->
+  <div class="overlay hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <span class="modal-icon">📄</span>
+      <h2 id="modal-title">Exportar PDF</h2>
+      <p>
+        Se generarán <strong id="modal-count">0</strong> ficha(s) en la hoja A4.<br>
+        ¿Cómo desea continuar?
+      </p>
+      <div class="modal-btns">
+        <button id="btn-download" class="btn-download">⬇️ &nbsp;Descargar PDF</button>
+        <button id="btn-wa"       class="btn-wa"      >📱 &nbsp;Compartir por WhatsApp</button>
+        <button id="btn-cancel"   class="btn-cancel-modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ TOAST ════════════ -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!--
+    ES Module entry point.
+    Modules are deferred by default, so jsPDF (above) is guaranteed
+    to be available when app.js initialises.
+  -->
+  <script type="module" src="assets/js/app.js"></script>
+
+</body>
+</html>
